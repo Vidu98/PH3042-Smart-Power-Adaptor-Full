@@ -1,0 +1,1 @@
+# PH3042-Smart-Power-Adaptor-Full
