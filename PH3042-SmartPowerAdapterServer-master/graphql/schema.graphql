@@ -1,0 +1,15 @@
+#QUERY==========================================
+type Query {
+    GetLatestReadings(count: Int!): [SensorReading!]!
+}
+
+type SensorReading {
+    current: Float!
+    voltage: Float!
+    timestamp: Int!
+}
+
+#MUTATION========================================
+type Mutation {
+    SetPower(deviceId: ID!, state: Boolean!): Boolean!
+}

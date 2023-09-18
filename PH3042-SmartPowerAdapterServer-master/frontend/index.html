@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <link rel="icon" type="image/png" href="./img/launcher_192.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+
+    <style>
+        * {
+            /* border: thin solid red !important; */
+            box-sizing: border-box;
+            margin: 0px;
+            padding: 0px;
+            overflow: hidden;
+            font-family: "Source Sans Pro Regular", "Ubuntu Light", "Segoe UI Medium";
+            color: white;
+            cursor: default;
+            user-select: none;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            background-color: black;
+        }
+
+        @media (orientation: landscape) {
+            body {
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                align-items: center;
+                align-content: center;
+            }
+
+            h1 {
+                font-size: 200px;
+            }
+
+            img {
+                height: 40vh;
+                margin: 0 100px;
+            }
+        }
+
+        @media (orientation: portrait) {
+            body {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+
+            h1 {
+                font-size: 100px;
+            }
+
+            img {
+                height: 20vh;
+                margin: 50px 0;
+            }
+        }
+
+        h1:hover {
+            color: gold;
+        }
+
+        h2, input {
+            text-align: center;
+            width: 100%;
+            font-size: 25px;
+            margin-bottom: 25px;
+        }
+
+        input {
+            background-color: transparent;
+            border: none;
+            outline: none;
+        }
+    </style>
+
+    <script>
+        function main() {
+            if (window.isSecureContext) {
+                navigator.serviceWorker.register("/serviceWorker.js", { scope: "/" });
+            }
+
+            btnOn.addEventListener("click", () => {
+                sendRequest(true);
+            });
+
+            btnOff.addEventListener("click", () => {
+                sendRequest(false);
+            });
+        }
+
+        function sendRequest(bulbState) {
+            fetch("/graphql", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    query: `mutation($deviceId: ID!, $state: Boolean!) { 
+                        SetPower(deviceId: $deviceId, state: $state)
+                    }`,
+                    variables: {
+                        deviceId: txtInDeviceId.value,
+                        state: bulbState
+                    }
+                })
+            }).then(res => {
+                if (res.status === 200) {
+                    imgBulb.src = bulbState === true ? "img/pic_bulbon.gif" : "img/pic_bulboff.gif";
+                }
+            });
+        }
+        
+        function initWebSockets() {
+            const socket = new WebSocket("wss://smart-power-adapter-server.fly.dev");
+            socket.addEventListener("open", e => {
+                socket.send(JSON.stringify({
+                    event: "introduce",
+                    deviceId: "123456"
+                }));
+            });
+
+            socket.addEventListener("message", e => {
+                console.log(e.data);
+            });
+        }
+    </script>
+</head>
+<body onload="main();">
+    <h2>Smart Power Adapter Infrastructure Demo</h2>
+    <input id="txtInDeviceId" type="text" value="123456">
+    <h1 id="btnOn">On</h1>
+    <img id="imgBulb" src="img/pic_bulboff.gif" alt="">
+    <h1 id="btnOff">Off</h1>
+</body>
+</html>
